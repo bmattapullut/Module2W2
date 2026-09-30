@@ -1,0 +1,86 @@
+---
+title: "Module 2 Workshop 2"
+author: "Brihatee Mattapullut"
+date: 30/09/2026 # Automatically uses today's date
+date-format: "DD/MM/YYYY"             # British/Australian date format
+
+# Output Config
+format: 
+  # HTML Output
+  html:
+    theme: cosmo          # Modern Bootstrap theme with clean typography
+    highlight-style: a11y # High-contrast syntax highlighting for code
+    toc: true             # Includes a Table of Contents
+    toc-depth: 3          # Captures down to sub-subsections (e.g., 3.1.1)
+    toc-location: left    # Pins TOC to left sidebar so it doesn't block main page
+    toc-title: "Contents" # Custom title for the TOC sidebar
+    number-sections: true # Numbers sections automatically (e.g., 1, 1.1, 2)
+    code-fold: true       # Collapses code blocks by default under a dropdown
+    code-summary: "Show code" # Label text on collapsed code blocks
+    code-tools: true      # Adds global code menu (Show/Hide All Code) at top right
+    code-copy: true       # Adds a one-click copy button to code blocks
+    embed-resources: true # Bundles images/CSS into a single stand-alone HTML file
+    df-print: paged       # Formats data frames into interactive paged tables
+    fig-height: 5         # Default plot height in inches
+    fig-width: 8          # Default plot width in inches
+    #fig-responsive: true # Scales figures smoothly across screen sizes
+    smooth-scroll: true   # Enables smooth scrolling when clicking TOC links
+---
+
+# 2.2 Tidying data - Loading libraries
+```{r}
+library(tidyverse)
+```
+
+
+Creating a table with appropriate format
+
+```{r}
+
+table1
+#> # A tibble: 6 × 4
+#>   country      year  cases population
+#>   <chr>       <int>  <int>      <int>
+#> 1 Afghanistan  1999    745   19987071
+#> 2 Afghanistan  2000   2666   20595360
+#> 3 Brazil       1999  37737  172006362
+#> 4 Brazil       2000  80488  174504898
+#> 5 China        1999 212258 1272915272
+#> 6 China        2000 213766 1280428583
+```
+
+
+A tidy dataset must have these 3 rules:
+  1. Each variable must have its own column.
+  2. Each observation must have its own row.
+  3. Each value must have its own cell.
+
+## Working with the `table1` dataset #### 
+
+The ggplot function can be used to filter, summarise and use functions such as group or golour in ggplot2, only if the data is tidy. 
+
+
+```{r}
+# Compute rate per 10,000
+table1 %>% 
+  mutate(rate = cases / population * 10000)
+# mutate() is used to add a new column
+
+```
+
+```{r}
+# Compute cases per year
+table1 %>% 
+  count(year, wt = cases)
+# it counts the number of entries in each year
+```
+
+```{r}
+# Visualise changes over time
+ggplot(table1, aes(year, cases)) + 
+  geom_line(aes(group = country), colour = "grey50") + 
+  geom_point(aes(colour = country))
+```
+
+# 2.3 Pivoting data to make it tidy
+
