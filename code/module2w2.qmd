@@ -85,3 +85,87 @@ ggplot(table1, aes(year, cases)) +
 # 2.3 Pivoting data to make it tidy
 
 1. Need to understand what each variable and observation actually means
+2. resolve the 2 common problems with untidy data:
+    - one variable is spread across multiple columns
+    - one observation is scattered across multiple rows
+    
+    
+How to fix:
+    - Pivot data (move it around) into tidy form
+    - 2 functions are used:
+        1. tidyr::pivot_longer() - makes data                longer (more rows)
+        2. tidyr::pivot_wider() - makes data                  wider (more columns)
+
+# 2.4 Lengthening datasets
+
+pivot_longer() is used to make data longer (more rows) by gathering multiple columns into 2 columns: 
+  -one for variable names and one for values.
+  
+For example: grouping data by year
+    - use the function facet_wrap() to create a         separate plot for each year
+    - use the function pivot_longer instead to split dataset by column abd reformat it into tidy format with:
+        - observations as rows,
+        - columns as variables
+        - values as cells
+        
+        
+        
+## Using pivot_longer() in an example
+```{r}
+billboard
+#> # A tibble: 317 × 79
+#>   artist       track               date.entered   wk1   wk2   wk3   wk4   wk5
+#>   <chr>        <chr>               <date>       <dbl> <dbl> <dbl> <dbl> <dbl>
+#> 1 2 Pac        Baby Don't Cry (Ke... 2000-02-26      87    82    72    77    87
+#> 2 2Ge+her      The Hardest Part O... 2000-09-02      91    87    92    NA    NA
+#> 3 3 Doors Down Kryptonite          2000-04-08      81    70    68    67    66
+#> 4 3 Doors Down Loser               2000-10-21      76    76    72    69    67
+#> 5 504 Boyz     Wobble Wobble       2000-04-15      57    34    25    17    17
+#> 6 98^0         Give Me Just One N... 2000-08-19      51    39    34    26    26
+#> # ℹ 311 more rows
+#> # ℹ 71 more variables: wk6 <dbl>, wk7 <dbl>, wk8 <dbl>, wk9 <dbl>, ...
+
+```
+
+```{r}
+#using the billboard dataset for pivot_longer()
+
+billboard |> 
+  pivot_longer(
+    cols = starts_with("wk"), 
+    names_to = "week",    #"week","rank" are quoted because they are new variables being created
+    values_to = "rank"
+  )
+
+```
+
+## Pivoting longer - example
+
+Using term "tribble" (not to be confused with "tibble") 
+It is a type of dataframe that allows us to construct small tibbles by hand
+
+```{r}
+df <- tribble(
+  ~id,  ~bp1, ~bp2,
+   "A",  100,  120,
+   "B",  140,  115,
+   "C",  120,  125
+)
+```
+
+dataset = df
+adding new variables:
+    1. id (already exists)
+    2. measurement (column names)
+    3. value (cell values)
+    
+```{r}
+df |> 
+  pivot_longer(
+    cols = bp1:bp2,
+    names_to = "measurement",
+    values_to = "value"
+  )
+
+```
+
