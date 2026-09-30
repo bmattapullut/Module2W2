@@ -84,3 +84,4 @@ ggplot(table1, aes(year, cases)) +
 
 # 2.3 Pivoting data to make it tidy
 
+1. Need to understand what each variable and observation actually means
