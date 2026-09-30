@@ -166,6 +166,81 @@ df |>
     names_to = "measurement",
     values_to = "value"
   )
+# data pivoted and repeated an id for each measurement
 
+```
+
+# 2.5 Widening datasets
+
+Use the function pivot_wider() to make data wider (more columns).
+It allows us to handle an observation if it is scattered across multiple rows. 
+
+## Example of pivot_wider()
+
+```{r}
+cms_patient_experience
+```
+
+In this example, the organisation is the core unit but is spread across six rows with one row for each measure. 
+
+The function distinct() is used to see the complete set of values of measure_cd and measure_title
+
+```{r}
+cms_patient_experience |> 
+  distinct(measure_cd, measure_title)
+```
+
+The columns do not have good variable names
+ - measure_cd doesn't explain the meaning of variable
+ - measure_title is too long to be used as a variable name
+ 
+Measure_cd will be used as the source of new column names for this example
+
+Pivot_wider() uses the opposite interface of pivot_longer().
+
+We need to provide the existing column names that define the values (values_from) and column name (names_from). We do not give new column names.
+
+```{r}
+cms_patient_experience |> 
+  pivot_wider(
+    names_from = measure_cd,
+    values_from = prf_rate
+  )
+
+# still not good since there are different rows for each organisation
+# we need to tell pivot_wider which column have values that uniquely identify each row 
+# here the variables start with "org"
+```
+
+```{r}
+cms_patient_experience |> 
+  pivot_wider(
+    id_cols = starts_with("org"),
+    names_from = measure_cd,
+    values_from = prf_rate
+  )
+```
+
+## Example 2 for pivot_wider()
+
+```{r}
+df <- tribble(
+  ~id, ~measurement, ~value,
+  "A",        "bp1",    100,
+  "B",        "bp1",    140,
+  "B",        "bp2",    115, 
+  "A",        "bp2",    120,
+  "A",        "bp3",    105
+)
+```
+
+Take the names from the measurement column using the names_from() argument and the values from the value column using the values_from() argument:
+
+```{r}
+df |> 
+  pivot_wider(
+    names_from = measurement,
+    values_from = value
+  )
 ```
 
