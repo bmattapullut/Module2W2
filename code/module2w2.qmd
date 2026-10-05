@@ -244,3 +244,338 @@ df |>
   )
 ```
 
+Starting the pivoting process 
+- Pivot_wider() needs to figure out what goes into rows and columns
+- new column names will be unique values of measurement
+
+```{r}
+ df |> 
+  distinct(measurement) |> 
+  pull()
+
+```
+
+By default:
+- rows in output are determined by all the variables without new names and values.
+- these are called id_cols
+- there will be only one column for this example, but normally, it can be any number of columns
+
+```{r}
+df |> 
+  select(-measurement, -value) |> 
+  distinct()
+
+```
+
+pivot_wider() then combines these results to generate an empty dataframe:
+
+- fills all missing values using data in input
+- for this e.g. not every output has a corresponding value in the input due to no third blood pressure measurement for patient B
+- cell remains empty
+
+
+```{r}
+df |> 
+  select(-measurement, -value) |> 
+  distinct() |> 
+  mutate(x = NA, y = NA, z = NA)
+
+```
+
+
+# 2.6 Pivoting exercises using palmer penguins
+
+## Lengthening data wth pivot_longer()
+
+- Creating a single plot showing distribution of all morphometric measurements (bill length, bill depth, flipper length) for each species of penguin
+- in the current tidy format the variables are spread across four separate columns
+- they can be plotted easily using Facet_wrap()
+- the variables need to be stacked into 2 columns: 1. identifying measurement name
+2. holding actual numerical value
+
+
+Putting the columns into 'longer' format
+
+```{r}
+library(palmerpenguins)
+
+# Create a long version of the penguins dataset
+
+penguins_long <- penguins |>
+  pivot_longer(
+    cols = c(bill_length_mm, bill_depth_mm, flipper_length_mm, body_mass_g),
+    names_to = "measurement_type",
+    values_to = "value"
+  )
+# View the result
+head(penguins_long)
+
+```
+
+structure of table after pivot_longer() has different syntax:
+-  target columns we wanted to pivot (cols)
+- he name of the new categorical column that will store our old column headers (names_to)
+-  name of the new numeric column that will house the data (values_to).
+
+the lengthened format is excatly what ggplot expects for multi-panel faceting
+
+Visualising distributions simultaneously:
+
+```{r}
+penguins_long |>
+  drop_na(value) |>
+  ggplot(aes(x = value, fill = species)) +
+  geom_histogram(bins = 30, alpha = 0.7, colour = "black") +
+  facet_wrap(~ measurement_type, scales = "free_x") +
+  theme_minimal() +
+  labs(
+    title = "Morphometric distributions across penguin species",
+    x = "Measurement value",
+    y = "Frequency"
+  )
+
+```
+
+
+## Widening data with pivot_wider()
+
+Presenting summary stats as a cross-tabulated matrix
+-much easier for reader to understand a wide table instead of long, repetitive list
+
+
+Calculating mean body mass for each species on each island using group_by() and summarise()
+
+```{r}
+mass_summary <- penguins |>
+  drop_na(body_mass_g) |>
+  group_by(species, island) |>
+  summarise(mean_mass = mean(body_mass_g))
+
+head(mass_summary)
+
+```
+
+
+Output above is not ideal for publication presentation, even though it is technically 'tidy' and computationally useful
+- Use pivot_wider() to pull island names into columns to create a clean matrix of species by island
+
+```{r}
+mass_matrix <- mass_summary |>
+  pivot_wider(
+    names_from = island,
+    values_from = mean_mass
+  )
+
+head(mass_matrix)
+
+```
+
+From results:
+- names_from: which column provides new column headers(the islands)
+- values_from:  which column populates the cells beneath them (the mean mass)
+-  NA values automatically populate where a specific species does not occur on a particular island
+This can be visualised directly through data wrangling
+
+
+# 2.7 Separating and using data tables
+
+Using table 3 (below)
+
+-one column (rate) contains 2 variables (cases and population) that are separated by a "/"
+- need to separate the 2 variables into their own columns using the function separate()
+
+```{r}
+table3
+#> # A tibble: 6 × 3
+#>   country      year rate             
+#> * <chr>       <int> <chr>            
+#> 1 Afghanistan  1999 745/19987071     
+#> 2 Afghanistan  2000 2666/20595360    
+#> 3 Brazil       1999 37737/172006362  
+#> 4 Brazil       2000 80488/174504898  
+#> 5 China        1999 212258/1272915272
+#> 6 China        2000 213766/1280428583
+```
+
+
+Splitting the rate column into 2 variables (cases and population) using the function separate()
+- separate() takes the column to split, the names of the new columns, and the separator character ("/") as arguments
+
+- by default, separate() will split values wherever it sees a non-alphanumeric character (i.e. a character that isn’t a number or letter).
+-separate() split the values of rate at the forward slash characters
+
+
+```{r}
+table3 %>% 
+  separate(rate, into = c("cases", "population"))
+
+```
+
+
+- to use a specific character to separate a column, you can pass the character to the sep argument of separate(). For example, we could rewrite the code above as:
+
+```{r}
+table3 %>% 
+  separate(rate, into = c("cases", "population"), sep = "/")
+```
+
+From the tables above, data types:
+- Both cases and population are listed as character (<chr>) types
+- This is a default of using separate()
+
+However, since the values in those columns are actually numbers, separate() can convert them to better types using convert = TRUE
+
+- they will be listed as integer (<int>) types instead of character (<chr>) types below:
+
+```{r}
+table3 %>% 
+  separate(rate, into = c("cases", "population"), convert = TRUE)
+
+```
+
+Can also use separate() to split vactor of integers
+- will interpret integers as positions to split at
+-  Positive values start at 1 on the far-left of the strings
+- Negative values start at -1 on the far-right of the strings
+
+When using integers to separate strings:
+-  the length of separation should be one less than the number of names in into.
+
+Using the arrangement to separate the last two digits of each year:
+- makes data less tidy, but demonstrates the flexibility of separate()
+
+```{r}
+table3 %>% 
+  separate(year, into = c("century", "year"), sep = 2)
+
+```
+
+
+## Using unite()
+
+- Inverse of separate() 
+- unite() combines multiple columns into a single column, with a specified separator character between the values.
+
+Using table 5 (below) to demonstrate unite()
+
+- used to combine multiple columns into single column
+- e.g. use unite() to rejoin century and year columns
+- unite() takes a data frame, the name of the new variable and a set of columns to combine using dplyr::select()
+
+Note: 
+Here we need to add sep ="" because we don’t want any separator (the default is to add an underscore _)
+
+
+```{r}
+table5 %>% 
+  unite(new, century, year, sep = "")
+
+```
+
+
+
+# 2.8 Wrangling strings and dates
+
+Before we can merge datasets or plot timelines, we must standardize our text strings and date-times
+
+The tidyverse includes two specialized packages for this: 
+- stringr for text 
+- lubridate for dates
+
+## Standardisong text with stringr
+
+- All functions in the stringr package begin with str_
+
+Cleaning a messy vector of site names before conducting a data summary
+
+-By applying these three simple functions, we have converted five uniquely messy inputs into just two perfectly standardized categories: "nelly_bay" and "geoffrey_bay"
+
+```{r}
+library(tidyverse)
+
+# A remarkably messy data frame of field sites
+messy_sites <- tibble(
+  site_id = c(" Nelly Bay", "nelly_bay", "NELLY BAY", " Geoffrey_Bay ", "geoffrey bay")
+)
+
+# Using stringr within mutate to standardize the text
+clean_sites <- messy_sites |>
+  mutate(
+    # 1. Convert everything to lowercase
+    site_clean = str_to_lower(site_id),
+    # 2. Replace any spaces with underscores
+    site_clean = str_replace_all(site_clean, pattern = " ", replacement = "_"),
+    # 3. Trim any leading or trailing whitespace (invisible spaces at the ends)
+    site_clean = str_trim(site_clean)
+  )
+
+print(clean_sites)
+
+```
+
+
+## Mastering time with lubridate
+
+- Allows  you to parse dates by simply spelling out the order of the components: year, month, day, hour, minute, and second.
+
+If your dataset contains a date formatted as "25/12/2026":
+- the day comes first, then the month, then the year. 
+- use the dmy() function
+
+If the date is "2026-12-25":
+- use ymd().
+
+```{r}
+library(lubridate)
+
+# Parsing different date formats
+date_1 <- dmy("25/12/2026")
+date_2 <- ymd("2026-12-25")
+
+# R now recognizes these as identical Date objects
+date_1 == date_2
+
+```
+
+For high-frequency marine data, such as acoustic telemetry or CTD profiles:
+- need to parse exact timestamps.
+- can be done by appending _hms (hours, minutes, seconds) to our functions.
+
+
+- Once a column is a recognised datetime object, ggplot2 will automatically understand how to format the x-axis chronologically
+- can easily extract specific components (e.g., using month(true_time) to get the month integer).
+
+
+
+```{r}
+# A tibble of raw sensor data with a messy character timestamp
+sensor_data <- tibble(
+  raw_time = c("14-05-2026 08:30:00", "14-05-2026 08:45:00", "14-05-2026 09:00:00"),
+  temperature = c(24.5, 24.6, 24.4)
+)
+
+# Converting character strings to true POSIXct datetime objects
+sensor_clean <- sensor_data |>
+  mutate(
+    true_time = dmy_hms(raw_time)
+  )
+
+print(sensor_clean)
+
+```
+
+# 2.9 Relational data: Joining tables
+
+
+
+
+
+
+
+
+
+
+
+
+
+
