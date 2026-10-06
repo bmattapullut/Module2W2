@@ -937,7 +937,10 @@ penguins_spatial_clean |>
 ```
 
 
-# 2.12 Keystone exercise: Estuary Fish Survey - Data Rescue Mission
+# 2.12 Keystone exercise: Estuary Fish Survey - Data Rescue Mission 
+
+in the exercise_w2 qmd
+
 
 
 
