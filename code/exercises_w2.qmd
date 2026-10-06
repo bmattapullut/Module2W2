@@ -145,6 +145,28 @@ metadata <- metadata |>
 
 - checking if the site names have been fixed
 
+```{r recheck-site-names}
+catch_data |> 
+  str()
+# catch_data |> 
+#   distinct(site)
+str(metadata)
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
