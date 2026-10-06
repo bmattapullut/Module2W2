@@ -27,3 +27,43 @@ format:
     smooth-scroll: true   # Enables smooth scrolling when clicking TOC links
 ---
 
+# Loading libraries
+```{r}
+library(tidyverse)
+library(readxl)
+```
+
+
+# 2.12 Keystone exercise: Estuary Fish Survey - Data Rescue Mission
+
+
+## Importing the files
+```{r}
+
+#estuary catch log data
+#the excel workbook has different tabs 
+#need to be loaded individually
+catch1 <- read_excel(here::here("data/estuary_catch_log.xlsx"), sheet = "Lower_ross")
+catch2 <- read_excel("../data/estuary_catch_log.xlsx", sheet = 2)
+catch3 <- read_excel("../data/estuary_catch_log.xlsx", sheet = 3)
+catch4 <- read_excel("../data/estuary_catch_log.xlsx", sheet = 4)  
+
+#estuary metadata file
+estuary_metadata <- read.csv(here::here("data/estuary_metadata.csv")) 
+  
+#estuary sonde data file
+estuary_sonde_data <- 
+read.csv(here::here("data/estuary_sonde_data.csv")) 
+  
+#species dictionary file
+species_dictionary <- 
+read.csv(here::here("data/species_dictionary.csv"))
+```
+
+
+## Combining all the different tabs in the catch log excel 
+
+```{r}
+
+```
+
