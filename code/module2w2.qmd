@@ -910,13 +910,31 @@ head(penguins_spatial)
 
 - drop any missing values in the body_mass_g column
 
-### 1. Group by species and island
+```{r}
+# Drop any missing values in the body_mass_g column 
+penguins_spatial_clean <- penguins_spatial |> 
+  drop_na(body_mass_g)
 
-### 2. summarise data to find maximum body mass (max())
 
-### 3. Pivot dataset wider so that the species form the rows, and the islands form the columns.
+```
 
 
+1. Group by species and island
+2. summarise data to find maximum body mass (max())
+3. Pivot dataset wider so that the species form the rows, and the islands form the columns.
+
+        - Got issue with the pivot_wider() function, was using the wrong column names for the names_from and values_from arguments. used species for values_from. Table came out wierd. changed it to names_from = island and values_from = max_body_mass and it worked.
+```{r}
+penguins_spatial_clean |> 
+  #group by species and island
+  group_by(species, island) |>
+  #summarising data to find maximum body mass
+  summarise(max_body_mass = max(body_mass_g)) |>
+  #pivoting wider to have species as rows and islands as columns
+  pivot_wider(names_from = island, values_from = max_body_mass)
+  
+  
+```
 
 
 # 2.12 Keystone exercise: Estuary Fish Survey - Data Rescue Mission
