@@ -57,7 +57,7 @@ A tidy dataset must have these 3 rules:
 
 ## Working with the `table1` dataset #### 
 
-The ggplot function can be used to filter, summarise and use functions such as group or golour in ggplot2, only if the data is tidy. 
+The ggplot function can be used to filter, summarise and use functions such as group or colour in ggplot2, only if the data is tidy. 
 
 
 ```{r}
@@ -102,7 +102,7 @@ pivot_longer() is used to make data longer (more rows) by gathering multiple col
   -one for variable names and one for values.
   
 For example: grouping data by year
-    - use the function facet_wrap() to create a         separate plot for each year
+    - use the function facet_wrap() to create a separate plot for each year
     - use the function pivot_longer instead to split dataset by column abd reformat it into tidy format with:
         - observations as rows,
         - columns as variables
@@ -857,28 +857,23 @@ print(island_metadata)
 
 ```
 
-### Creating a new object called clean_metadata
-
-```{r}
-# 
-```
-
-
-
-### Using mutate(), stringr, and lubridate to fix Island_name column to match the island column in penguins dataset 
-
+Creating a new object called clean_metadata
+Using mutate(), stringr, and lubridate to fix Island_name column to match the island column in penguins dataset 
+Converting the station_install column into a proper date object
 - note: there are hidden spaces
 
-
+    - got issue with mutate, tried to copy paste mutate function done earlier but was not working. looked at the table and saw that only Biscoe was not capitalised, so used str_to_title() to capitalise it. also was using clean_island_name instead of island_name in the mutate function, but it created a new column called clean_island_name instead of changing the existing island_name column. changed it to island_name and it worked.
 ```{r}
+penguins |> 
+  distinct(island) |> 
+  pull()
 
-```
-
-
-### Converting the station_install column into a proper date object
-
-
-```{r}
+clean_metadata <- island_metadata |>
+ # Capitalise island names
+  mutate(island_name = str_to_title(island_name)) |>
+  # change station_install to date
+  mutate(station_install = dmy(station_install))
+  
 
 ```
 
@@ -893,7 +888,8 @@ print(island_metadata)
 
 
 ```{r}
-
+penguins_spatial <- penguins |> 
+  left_join(clean_metadata, by = join_by(island == island_name))
 ```
 
 
@@ -916,11 +912,11 @@ head(penguins_spatial)
 
 ### 1. Group by species and island
 
-
 ### 2. summarise data to find maximum body mass (max())
 
-
 ### 3. Pivot dataset wider so that the species form the rows, and the islands form the columns.
+
+
 
 
 # 2.12 Keystone exercise: Estuary Fish Survey - Data Rescue Mission
