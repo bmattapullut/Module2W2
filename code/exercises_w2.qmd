@@ -37,7 +37,7 @@ library(readxl)
 # 2.12 Keystone exercise: Estuary Fish Survey - Data Rescue Mission
 
 
-## Importing the files
+# Importing the files
 ```{r}
 
 #estuary catch log data
@@ -49,21 +49,102 @@ catch3 <- read_excel("../data/estuary_catch_log.xlsx", sheet = 3)
 catch4 <- read_excel("../data/estuary_catch_log.xlsx", sheet = 4)  
 
 #estuary metadata file
-estuary_metadata <- read.csv(here::here("data/estuary_metadata.csv")) 
+metadata <- read.csv(here::here("data/estuary_metadata.csv")) 
   
 #estuary sonde data file
-estuary_sonde_data <- 
-read.csv(here::here("data/estuary_sonde_data.csv")) 
+
   
 #species dictionary file
-species_dictionary <- 
+species_dict <- 
 read.csv(here::here("data/species_dictionary.csv"))
 ```
 
 
-## Combining all the different tabs in the catch log excel 
+# Inspecting the indiviual tabs
 
-```{r}
+Look at anomalies between the workbooks and variable names if they do not align
+
+The column titles are consistent but the variable names are not consistent across the different tabs.
+```{r inspect-catch-tabs}
+catch1
+catch2
+catch3
+catch4
 
 ```
+
+
+# Combining all the different tabs in the catch log excel 
+
+Binding the rows
+
+```{r bind-catch}
+catch_data <- bind_rows(catch1, catch2, catch3, catch4)
+# Clean up the environment
+rm(catch1, catch2, catch3, catch4) # Clean up the environment
+```
+
+
+# Preliminary checks
+
+```{r inspect-catch}
+catch_data
+head(catch_data)
+glimpse(catch_data)
+str(catch_data)
+
+```
+
+
+Using distinct() to check for unique values in the columns to see if there are any anomalies in the data and if need to clean before converting to factor variables
+  
+    - the species names and sites are not consistent across the different tabs. The species and site names have different capitalisation. 
+    - need to be cleaned before joining with the species dictionary and estuary metadata files.
+    
+    
+```{r distinct-catch}
+catch_data |> 
+  distinct(site)
+
+catch_data |> 
+  distinct(species)
+
+```
+
+# Checking metadata file
+
+    - Site names also need to be cleaned before joining with the catch data file.
+    
+```{r inspect-metadata}
+head(metadata)
+glimpse(metadata)
+```
+
+
+
+# Fixing site names in the catch data file + converting to factor variables
+
+```{r fix-site-names}
+catch_data <- catch_data |>
+  mutate(
+    site = str_to_lower(str_trim(site)),
+    site = str_replace_all(site, " ", "_")) |> 
+  # Convert all chr to fct
+  mutate(across(where(is.character), as_factor)
+  )
+
+metadata <- metadata |>
+  mutate(
+    site_name = str_to_lower(str_trim(site_name)),
+    site_name = str_replace_all(site_name, " ", "_")) |> 
+  # Convert all chr to fct
+  mutate(across(where(is.character), as_factor)
+  )
+
+```
+
+- checking if the site names have been fixed
+
+
+
 
