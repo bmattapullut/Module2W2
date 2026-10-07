@@ -43,20 +43,22 @@ library(readxl)
 #estuary catch log data
 #the excel workbook has different tabs 
 #need to be loaded individually
-catch1 <- read_excel(here::here("data/estuary_catch_log.xlsx"), sheet = "Lower_ross")
-catch2 <- read_excel("../data/estuary_catch_log.xlsx", sheet = 2)
-catch3 <- read_excel("../data/estuary_catch_log.xlsx", sheet = 3)
-catch4 <- read_excel("../data/estuary_catch_log.xlsx", sheet = 4)  
+catch1 <- read_excel(here::here("data/workshop2/estuary_catch_log.xlsx"), sheet = "Lower_ross")
+catch2 <- read_excel("../data/workshop2/estuary_catch_log.xlsx", sheet = 2)
+catch3 <- read_excel("../data/workshop2/estuary_catch_log.xlsx", sheet = 3)
+catch4 <- read_excel("../data/workshop2/estuary_catch_log.xlsx", sheet = 4)  
 
 #estuary metadata file
-metadata <- read.csv(here::here("data/estuary_metadata.csv")) 
+metadata <- read.csv(here::here("data/workshop2/estuary_metadata.csv")) 
   
 #estuary sonde data file
+# code is written in separate script
 
+source(here::here("code/diw_sensor.R"))
   
 #species dictionary file
 species_dict <- 
-read.csv(here::here("data/species_dictionary.csv"))
+read.csv(here::here("data/workshop2/species_dictionary.csv"))
 ```
 
 
@@ -154,10 +156,53 @@ str(metadata)
 
 ```
 
+# Checking taxonomic dictionary file
+
+Common names need to be checked in the catch log and the species dictionary file to see if they are consistent before joining the two files.
+
+```{r}
+#checking species dictionary file
+head(species_dict)
+```
+```{r check-species-names}
+catch_data |> 
+  distinct(species)
+# Can see these are different to the dictionary
+species_dict |>
+  distinct(common_name)
+
+```
+## Standardising species names in the catch data file to match the species dictionary file
+
+Even after standardising, the species name still is not consistent with the species dictionary file.
 
 
+```{r fix-species-names}
+catch_data <- catch_data |>
+  mutate(
+    species = str_to_lower(str_trim(species)),
+    species = str_replace_all(species, " ", "_")
+  )
+```
 
+## Creating new variable in catch log file to match the species dictionary file
 
+after creating the new variable, the species names need to be joined with the species dictionary file to get the correct species names.
+
+```{r join-species-dict}
+catch_data <- catch_data |>
+  mutate(common_name = species) |>
+  left_join(species_dict, by = join_by(common_name))
+
+```
+
+```{r}
+# checking the catch log to see if the species and site names are fixed
+
+glimpse(catch_data)
+```
+
+## Sensor data
 
 
 
