@@ -204,10 +204,72 @@ glimpse(catch_data)
 
 ## Sensor data
 
+The sensor data was taken for a duration of 15 minutes for each four sites for 30 days. The data was collected at 1 second intervals. The sensor data was collected using a YSI EXO2 sonde. 
+
+The data was collected for the following parameters: temperature, salinity, dissolved oxygen, pH, turbidity, and chlorophyll-a.
+
+The data was collected for the following sites: Lower Ross, Upper Ross, Lower Pioneer, Upper Pioneer.
 
 
+## Joining the sensor data with the metadata file
 
+```{r join-all}
+catch_data_final <- catch_data |>
+  left_join(metadata, by = join_by(site == site_name)) |>
+  left_join(sensor_daily, by = join_by(site, date))
 
+```
+
+```{r check-final-join}
+glimpse(catch_data_final)
+#checking if the join worked
+```
+
+There should be 480 rows of data for each site (4 sites x 30 days x 4 parameters) and 12 columns of data (catch log + metadata + sensor data). But we only have 427 rows of data. This is because there are some missing values in the sensor data file. The missing values are due to the sonde recording zero counts of certain species at different sites. 
+## Wrangling final dataset
+
+```{r wrangle-final-zeros}
+catch_data_final <- 
+catch_data_final |> 
+  complete(
+    nesting(site, date, 
+           # lat, lon, 
+            zone, mean_temp, mean_salinity, mean_turbidity),
+    scientific_name
+  ) |>
+  mutate(
+    # Convert the resulting NA counts to 0
+    count = coalesce(count, 0)
+  )
+
+```
+
+After the main wrangling, need to check the difference in environmental variables among the zones.
+
+### Salinity
+```{r}
+# Let's make a table
+sal_sum <- 
+  catch_data_final |>
+  group_by(site) |>
+  summarise(
+   # sem_salinity = sd(mean_salinity) / sqrt(n()),
+    sd_salinity = sd(mean_salinity, na.rm = TRUE),
+    median_salinity = median(mean_salinity, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+# And from this a plot
+sal_sum |> 
+  ggplot(aes(x = site, y = median_salinity)) +
+  geom_point() +
+  geom_errorbar(aes(ymin = median_salinity - sd_salinity, ymax = median_salinity + sd_salinity), width = 0.2) +
+  theme_minimal() +
+  labs(#title = "Median Salinity by Zone with Standard Deviation Error Bars",
+       x = "Site",
+       y = "Median Salinity (ppt)")
+
+```
 
 
 
